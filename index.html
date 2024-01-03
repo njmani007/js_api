@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rest Countries Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    .result-container {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    .country-card {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .country-card img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>API Response</h2>
+  <pre id="output" class="result-container"></pre>
+
+  <h2>Countries from Asia</h2>
+  <div id="asiaCountries" class="result-container"></div>
+
+  <h2>Countries with Population Less than 2 Lakhs</h2>
+  <div id="lessPopulationCountries" class="result-container"></div>
+
+  <h2>Details of Countries</h2>
+  <div id="countryDetails" class="result-container"></div>
+
+  <h2>Total Population</h2>
+  <div id="totalPopulation" class="result-container"></div>
+
+  <h2>Country using US Dollars</h2>
+  <div id="usDollarCountry" class="result-container"></div>
+
+  <script>
+    // Create an XMLHttpRequest object
+    var xhr = new XMLHttpRequest();
+
+    // Configure it as an asynchronous GET request to the specified URL
+    xhr.open('GET', 'https://restcountries.com/v3.1/all', true);
+
+    // Set up a callback function to handle the response
+    xhr.onload = function () {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        // If the request is successful, parse and process the response
+        var data = JSON.parse(xhr.responseText);
+
+        // Display the raw API response
+        displayApiResponse(data);
+
+        // Task 1: Get all countries from Asia continent/region using Filter function
+        var asiaCountries = data.filter(country => country.region === 'Asia');
+        displayCountries('asiaCountries', asiaCountries);
+
+        // Task 2: Get all countries with a population of less than 2 lakhs using Filter function
+        var lessPopulationCountries = data.filter(country => {
+          var population = country.population?.value || 0;
+          return population < 200000;
+        });
+        displayCountries('lessPopulationCountries', lessPopulationCountries);
+
+        // Task 3: Print details (name, capital, flag) using forEach function
+        displayCountryDetails('countryDetails', data);
+
+        // Task 4: Print the total population of countries using reduce function
+        var totalPopulation = data.reduce((acc, country) => {
+          var population = country.population?.value || 0;
+          return acc + population;
+        }, 0);
+        document.getElementById('totalPopulation').textContent = `Total Population: ${totalPopulation.toLocaleString()}`;
+
+        // Task 5: Print the country that uses US dollars as currency
+        var usDollarCountry = data.find(country => country.currencies && country.currencies.USD);
+        displayCountryDetails('usDollarCountry', [usDollarCountry]);
+
+      } else {
+        // If the request was not successful, handle the error
+        displayApiError('Request failed with status: ' + xhr.status);
+      }
+    };
+
+    // Set up a callback function to handle network errors
+    xhr.onerror = function () {
+      displayApiError('Network error occurred');
+    };
+
+    // Send the request
+    xhr.send();
+
+    // Helper function to display API response
+    function displayApiResponse(data) {
+      var outputElement = document.getElementById('output');
+      outputElement.textContent = JSON.stringify(data, null, 2);
+    }
+
+    // Helper function to display countries in a card format
+    function displayCountries(containerId, countries) {
+      var container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      countries.forEach(country => {
+        var card = document.createElement('div');
+        card.classList.add('country-card');
+
+        var name = document.createElement('h3');
+        name.textContent = country.name.common;
+        card.appendChild(name);
+
+        var flag = document.createElement('img');
+        flag.src = country.flags.png || 'N/A';
+        card.appendChild(flag);
+
+        container.appendChild(card);
+      });
+    }
+
+    // Helper function to display country details
+    function displayCountryDetails(containerId, countries) {
+      var container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      countries.forEach(country => {
+        var card = document.createElement('div');
+        card.classList.add('country-card');
+
+        var name = document.createElement('h3');
+        name.textContent = country.name.common;
+        card.appendChild(name);
+
+        var capital = document.createElement('p');
+        capital.textContent = `Capital: ${country.capital[0] || 'N/A'}`;
+        card.appendChild(capital);
+
+        var flag = document.createElement('img');
+        flag.src = country.flags.png || 'N/A';
+        card.appendChild(flag);
+
+        container.appendChild(card);
+      });
+    }
+
+    // Helper function to display API error
+    function displayApiError(errorMessage) {
+      var outputElement = document.getElementById('output');
+      outputElement.textContent = 'Error: ' + errorMessage;
+    }
+  </script>
+
+</body>
+</html>
